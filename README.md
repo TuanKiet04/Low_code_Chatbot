@@ -1,5 +1,4 @@
-# Low_code_Chatbot
-My Project in UET
+# My Low-Code AI Chatbot in UET
 ---
 
 This project demonstrates how to build a **low-code AI chatbot** using:
@@ -20,13 +19,12 @@ The chatbot crawls articles from `insideHPC.com`, summarizes them with AI, index
 | `/workflow/`   | Contains exported n8n workflow files.          |
 | `/report/`     | PDF report and LaTeX source.                   |
 | `README.md`    | Project documentation (this file).             |
-| `.env.example` | Sample environment variables file (if needed). |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1️⃣ Install Dependencies
+### 1️⃣ Self-hosting
 
 You'll need:
 
@@ -122,18 +120,10 @@ curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https:
 
 ---
 
-## 📸 Demo Screenshots
-
-| Workflow View                              | Chatbot in Action                 |
-| ------------------------------------------ | --------------------------------- |
-| ![Workflow](workflow/workflow-diagram.png) | ![Bot](report/bot-screenshot.png) |
-
----
-
 ## 🙌 Credits
 
-* **Student**: Ngo Van Kiet (22022643)
-* **Supervisor**: Dr. Nguyen Viet Cuong
+* **Student**: Ngo Van Kiet - 22022643
+* **Advisor**: Ph.D Nguyen Viet Cuong
 
 ---
 
@@ -146,6 +136,5 @@ curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https:
 
 ---
 
-# ✅ Done!
-
-Let me know if you want to **customize** any part of the README (e.g., change screenshots, add badges, or expand instructions)! 🚀
+#Contact🚀
+Feel free to send me any questions about launching this project through my email **kietngo9204@gmail.com**
