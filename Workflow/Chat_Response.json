@@ -1,0 +1,208 @@
+{
+  "name": "Chat Response",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}\n\nYou are an AI assistant with access to Elasticsearch. For each user question:\n– If it requires data stored in Elasticsearch, call the tool search_es(query) and summarize its results.\n– Otherwise, answer using your general knowledge.\n",
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        20,
+        -60
+      ],
+      "id": "1041d3f9-49c4-4639-8f34-7d97785186d0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "mistral:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        140
+      ],
+      "id": "12e3df41-4b16-4fb7-9b21-e428b865c040",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xKS9J6a3oNHCgdCX",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "index",
+        "operation": "getAll"
+      },
+      "type": "n8n-nodes-base.elasticsearchTool",
+      "typeVersion": 1,
+      "position": [
+        280,
+        120
+      ],
+      "id": "f2cbadd8-7d89-4671-bfad-75c6d8868ba7",
+      "name": "Elasticsearch2",
+      "credentials": {
+        "elasticsearchApi": {
+          "id": "335bdpJG9lsTJdEl",
+          "name": "Elasticsearch account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "indexId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "sessionID",
+              "fieldValue": "={{ $json.sessionId }}"
+            },
+            {
+              "fieldId": "action",
+              "fieldValue": "={{ $json.action }}"
+            },
+            {
+              "fieldId": "chatInput",
+              "fieldValue": "={{ $json.chatInput }}"
+            }
+          ]
+        },
+        "additionalFields": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.elasticsearch",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -220
+      ],
+      "id": "b55e0f9a-c1f2-4a4c-8672-87f139620bdd",
+      "name": "Elasticsearch",
+      "credentials": {
+        "elasticsearchApi": {
+          "id": "335bdpJG9lsTJdEl",
+          "name": "Elasticsearch account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -420,
+        -80
+      ],
+      "id": "f48bc710-80b3-4052-a95b-4432223d4750",
+      "name": "Telegram Trigger",
+      "webhookId": "2f95a60c-5e3c-461e-bade-1bd371aabe10",
+      "credentials": {
+        "telegramApi": {
+          "id": "iX5btEvMp7LaU4Aw",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        -60
+      ],
+      "id": "5fa883be-9603-44ac-ae5f-65c6d97b101d",
+      "name": "Telegram",
+      "webhookId": "329243a5-46a2-48d1-9d04-378361ab1a6e",
+      "credentials": {
+        "telegramApi": {
+          "id": "iX5btEvMp7LaU4Aw",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elasticsearch2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Elasticsearch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "de6f9602-e498-4e80-8210-36c5d7242294",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "58bbb0cc1b89badf83b4cae35ae01c30ebf30b4d6a1dbe0d105d7f2e34faf986"
+  },
+  "id": "RpSE1rmKKonDMfCL",
+  "tags": []
+}
