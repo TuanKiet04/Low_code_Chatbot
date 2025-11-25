@@ -1,0 +1,315 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -940,
+        40
+      ],
+      "id": "078ca71b-2341-45db-b8ff-b7ba666c52c5",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        180
+      ],
+      "id": "51d5f8be-390a-4a07-b61a-188fac2bff15",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -700,
+        40
+      ],
+      "id": "eaf9069e-c1f5-4472-9720-28a0ee49d265",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        60,
+        220
+      ],
+      "id": "617d0a06-d25e-4040-acb2-f5fd463585f5",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "n7X7ccJf2ZDNSNoG",
+          "name": "10/11/25"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -100
+      ],
+      "id": "f433c62f-4eb9-4038-a887-6d753524f029",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6eb5279a-e0a8-4485-a04f-5083fe37416c",
+              "name": "guid",
+              "value": "={{ $json.guid }}",
+              "type": "string"
+            },
+            {
+              "id": "19e48e14-3342-48ee-858e-45683246bdf1",
+              "name": "url",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "c087cf01-afc0-423d-99d1-aed55972b648",
+              "name": "isoDate",
+              "value": "={{ $json.isoDate }}",
+              "type": "string"
+            },
+            {
+              "id": "067f3695-bac9-44bc-9ddb-c1d868f543f2",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "dd13850a-dbd7-46a0-a510-f8bb235f7533",
+              "name": "topic",
+              "value": "={{ $json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        60
+      ],
+      "id": "0705ed92-c93d-41a5-a63a-ebc5b21fe112",
+      "name": "Get indexes"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    guid: $input.first().json.guid,\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        60
+      ],
+      "id": "40b21c55-7a4a-4949-a35b-0687d169d899",
+      "name": "get GUID"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    url: $input.first().json.url,\n    topic: $input.first().json.topic,\n    title: $input.first().json.title,\n    isoDate: $input.first().json.isoDate\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        200
+      ],
+      "id": "493988ee-a0ea-408c-bec3-805798e8e618",
+      "name": "Link & Date"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.guid }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "guid",
+              "description": "guid of the article",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "=You will be given a {{ $json.guid }},. Your task is to extract a clean identifier string to the format:\n[websitename]_[numeric_id]\nExamples:\n- https://vnexpress.net/news/2025/07/25/helloworld-12345.html → vnexpress_12345\n- https://abcnews.go.com/article?id=12345&utm=xyz → abcnews_12345\nOnly return the clean identifier string."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        60
+      ],
+      "id": "4ef1e5a9-2e7b-4c5b-8d3f-a2f910ca984d",
+      "name": "Unique GUID"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01c064c4-63de-4a2c-a725-b3cc3dd6f026",
+              "name": "guid",
+              "value": "={{ $json.output.guid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        60
+      ],
+      "id": "f644bb1e-680b-40e6-b682-2d9fd0c553a9",
+      "name": "GUID"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get indexes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Unique GUID",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get indexes": {
+      "main": [
+        [
+          {
+            "node": "Link & Date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get GUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get GUID": {
+      "main": [
+        [
+          {
+            "node": "Unique GUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link & Date": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Unique GUID": {
+      "main": [
+        [
+          {
+            "node": "GUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GUID": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9295b22a309b6e3383c40aee81f54809ee1fb468c7f2047b0ddac566be4f121c"
+  }
+}
