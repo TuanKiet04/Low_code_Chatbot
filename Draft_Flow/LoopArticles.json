@@ -1,0 +1,561 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "text": "={{ $json.cleanHTML }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "title",
+              "description": "the title of the article",
+              "required": true
+            },
+            {
+              "name": "creator",
+              "description": "the creator of the article",
+              "required": true
+            },
+            {
+              "name": "content",
+              "description": "the content of the article",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "=TASK: Extract the requirements below from the  Text with absolute precision.\n\nEXTRACTION REQUIREMENTS:\n1. TITLE: Extract the main article headline/title exactly as displayed\n2. CREATOR: Extract author  \n3. CONTENT: Find and Extract the complete article content text maintaining original structure.\n\nCONTENT EXTRACTION RULES:\n⚠️ CRITICAL: Extract content EXACTLY as written - NO modifications allowed\n- Preserve ALL original paragraphs in their exact order\n- Maintain original paragraph breaks and formatting\n- Keep anything related to the content of the article, don't be distracted by the '-', this may be contains the conversation of the newspaperman.\n- Do NOT summarize, paraphrase, condense, or rewrite ANY text\n- Do NOT combine or split paragraphs\n- Do NOT correct grammar, spelling, or punctuation\n\nEXCLUDE COMPLETELY:\n- Navigation menus and site headers/footers\n- Sidebar content and widgets\n- Advertisement blocks\n- Comment sections\n- Social media sharing buttons\n- Download/subscription prompts\n- Author bio boxes (unless part of main article)\n- Unrelated conent\n\nOUTPUT FORMAT:\nTITLE: [Extract exact title]\nCREATOR: [Extract author/creator. If you can not find author, replace with 'Staff']\nCONTENT: [Extract complete article body maintaining original paragraph structure]\n\nRemember: Your role is to be a precise content extractor, not an editor or summarizer. Preserve the author's original work in its entirety."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -20
+      ],
+      "id": "79c16296-e2b3-44b7-a364-a47d483154ce",
+      "name": "Information Extractor",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        180
+      ],
+      "id": "6cf7dce7-57ff-4b07-bd30-ccb1a8258cb4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "n7X7ccJf2ZDNSNoG",
+          "name": "10/11/25"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -220,
+        60
+      ],
+      "id": "5760c5f8-b1f4-4c1d-85cf-5c2b2424d15d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "content": "## Get index\nThis sub-workflow is triggered when there is an article is waiting for processed.",
+        "height": 680,
+        "width": 2260,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "e4d2854a-3943-43c5-837c-5cc7efecfa15",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Referer",
+              "value": "https://aibusiness.com/"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {}
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        60
+      ],
+      "id": "c280be5d-91f6-443f-80bf-6e4ec9766d18",
+      "name": "Fetch Webpage",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "body",
+              "cssSelector": "main, html",
+              "skipSelectors": "header, footer, aside, .sidebar, .navigation, .menu, .social-share, .comments, script, style, .ads, .advertisement, .related-posts, form, button, .breadcrumb, .img, .javascript, #copy-right, .copy-right"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -20
+      ],
+      "id": "3177ed6a-911d-4066-905e-ccb110ab89a8",
+      "name": "Clean HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node - Làm sạch HTML content\nconst htmlContent = $input.first().json.body;\n\n// Loại bỏ các patterns không cần thiết\nlet cleanedContent = htmlContent\n  // Xóa các URL và links\n  .replace(/https?:\\/\\/[^\\s\\[\\]]+/g, '')\n  .replace(/\\[data:image\\/[^]]+\\]/g, '')\n  // Xóa các ký tự đặc biệt trong navigation\n  .replace(/\\[\\s*https?:\\/\\/[^\\]]+\\]/g, '')\n  .replace(/\\* https?:\\/\\/[^\\s]+/g, '')\n  \n  // Xóa navigation menu patterns\n  .replace(/Subscribe \\[.*?\\]/g, '')\n  .replace(/Enterprise AI \\[.*?\\]/g, '')\n  .replace(/GenAI\\/LLMs \\[.*?\\]/g, '')\n  .replace(/\\* [A-Z][^*]+\\[https?:\\/\\/[^\\]]+\\]/g, '')\n  \n  // Xóa social sharing buttons\n  .replace(/\\* share \\[.*?\\]/g, '')\n  .replace(/\\* email \\[.*?\\]/g, '')\n  \n  // Xóa footer information\n  .replace(/Filed Under:.*?Tagged With:.*$/s, '')\n  .replace(/Copyright © \\d{4}.*$/s, '')\n  \n  // Làm sạch whitespace và ký tự đặc biệt\n  .replace(/\\s+/g, ' ')\n  .replace(/\\[\\s*\\]/g, '')\n  .replace(/\\*\\s*\\*/g, '')\n  .trim();\n\nreturn [{\n  json: {\n    cleanHTML: cleanedContent\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        -20
+      ],
+      "id": "dfb8757e-bd42-4850-b0ec-cb8ee95954ee",
+      "name": "Remove chars"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.error }}",
+                    "rightValue": "=could not be found",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "b0896c3d-01b2-40a9-a3f4-8fef4bea9356"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b2020bae-6540-4184-96c7-3b7e6ce6e2d7",
+                    "leftValue": "={{ $json.error }}",
+                    "rightValue": "too many requests from you",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c42ba3b6-5a05-4dfb-9032-960a0551a74b",
+                    "leftValue": "={{ $json.error }}",
+                    "rightValue": "Cannot read",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5517900d-b4ce-47de-84a0-07aae56ca090",
+                    "leftValue": "={{ $json.error }}",
+                    "rightValue": "You exceeded your current quota, please check your plan and billing details.",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1280,
+        20
+      ],
+      "id": "dc23a2af-13b7-4a42-b03f-4f95ea83aaac",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Resource not found!"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -120
+      ],
+      "id": "3f358879-f098-44fb-8464-41092b004730",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        320
+      ],
+      "id": "d9c6417a-4d0c-47e2-87b6-d4429244231a",
+      "name": "Wait",
+      "webhookId": "3be21b87-02d9-416d-a8db-224770c860be"
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Remove chars').item.json.cleanHTML }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "title",
+              "description": "title of the article",
+              "required": true
+            },
+            {
+              "name": "creator",
+              "description": "creator of the article",
+              "required": true
+            },
+            {
+              "name": "content",
+              "description": "content of the article",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "TASK: Extract the requirements below from the  Text with absolute precision.\n\nEXTRACTION REQUIREMENTS:\n1. TITLE: Extract the main article headline/title exactly as displayed\n2. CREATOR: Extract author  \n3. CONTENT: Extract the complete article body text maintaining original structure\n\nCONTENT EXTRACTION RULES:\n⚠️ CRITICAL: Extract content EXACTLY as written - NO modifications allowed\n- Preserve ALL original paragraphs in their exact order\n- Maintain original paragraph breaks and formatting\n- Keep anything related to the content of the article, don't be distracted by the '-', this may be contains the conversation of the newspaperman.\n- Do NOT summarize, paraphrase, condense, or rewrite ANY text\n- Do NOT combine or split paragraphs\n- Do NOT correct grammar, spelling, or punctuation\n\nEXCLUDE COMPLETELY:\n- Navigation menus and site headers/footers\n- Sidebar content and widgets\n- Advertisement blocks\n- Comment sections\n- Social media sharing buttons\n- Download/subscription prompts\n- Author bio boxes (unless part of main article)\n- Unrelated conent\n\nOUTPUT FORMAT:\nTITLE: [Extract exact title]\nCREATOR: [Extract author/creator. If you can not find author, replace with 'Staff']\nCONTENT: [Extract complete article body maintaining original paragraph structure]\n\nRemember: Your role is to be a precise content extractor, not an editor or summarizer. Preserve the author's original work in its entirety."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1520,
+        20
+      ],
+      "id": "328285b8-d911-4d13-a594-e8d5adcae14b",
+      "name": "Information Extractor2"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1740,
+        240
+      ],
+      "id": "5367c520-42d0-48b6-9351-3436d4e56ecd",
+      "name": "OpenRouter Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -120
+      ],
+      "id": "00ca54cc-9510-4b47-8eae-54ecdf3a9ad5",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0de11219-df32-4008-8213-a7b12d1bd160",
+              "leftValue": "={{ $json.error.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        180,
+        60
+      ],
+      "id": "465d819f-bf99-4ca7-a7c4-26c8a86d603f",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        480,
+        180
+      ],
+      "id": "3b303d33-81a3-4b96-9ba8-4137c7d38629",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        160
+      ],
+      "id": "b0457c36-6966-4c51-ab2f-23073c5e2f73",
+      "name": "No Operation, do nothing2"
+    }
+  ],
+  "connections": {
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Fetch Webpage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Webpage": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean HTML": {
+      "main": [
+        [
+          {
+            "node": "Remove chars",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove chars": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Clean HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9295b22a309b6e3383c40aee81f54809ee1fb468c7f2047b0ddac566be4f121c"
+  }
+}
