@@ -1,0 +1,663 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ $json.feed }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -620,
+        120
+      ],
+      "id": "9c2c4483-1574-4724-9948-c21f677a89f1",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "articles_status",
+          "mode": "list",
+          "cachedResultName": "articles_status"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "guid",
+              "condition": "IS NOT NULL"
+            },
+            {
+              "column": "iso_date",
+              "condition": "IS NOT NULL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -300,
+        -240
+      ],
+      "id": "c2498e5b-f289-4afe-ab7f-ae4a009d5578",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "n0E8eAX21FqvLM3w",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "guid",
+              "field2": "guid"
+            },
+            {
+              "field1": "isoDate",
+              "field2": "isoDate"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "fuzzyCompare": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        -40,
+        -160
+      ],
+      "id": "b009f07a-feb1-48b3-8095-ce738df114a4",
+      "name": "Compare Datasets"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -200
+      ],
+      "id": "b719af6e-4a9d-4f31-9149-76eb43c00b53",
+      "name": "Skip"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        100
+      ],
+      "id": "c8665438-333d-454f-8136-95207a8586f4",
+      "name": "Reject"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "articles_status",
+          "mode": "list",
+          "cachedResultName": "articles_status"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "guid": "{{ $json.guid }}",
+            "link": "{{ $json.link }}",
+            "status": "pending",
+            "iso_date": "={{ $json.isoDate }}"
+          },
+          "matchingColumns": [
+            "guid"
+          ],
+          "schema": [
+            {
+              "id": "guid",
+              "displayName": "guid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "iso_date",
+              "displayName": "iso_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        -60
+      ],
+      "id": "ccfdd16b-6579-49c3-a48f-8e0fc4f35083",
+      "name": "Update Data",
+      "credentials": {
+        "postgres": {
+          "id": "n0E8eAX21FqvLM3w",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "articles_status",
+          "mode": "list",
+          "cachedResultName": "articles_status"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "guid": "={{ $json.guid }}",
+            "link": "={{ $json.link }}",
+            "iso_date": "={{ $json.isoDate }}"
+          },
+          "matchingColumns": [
+            "guid"
+          ],
+          "schema": [
+            {
+              "id": "guid",
+              "displayName": "guid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "iso_date",
+              "displayName": "iso_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        -360
+      ],
+      "id": "99985f59-64a5-4ba8-aa4d-8afe08b70047",
+      "name": "Insert New Data",
+      "credentials": {
+        "postgres": {
+          "id": "n0E8eAX21FqvLM3w",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e33a87c5-6685-4550-964f-3ea317949e24",
+              "leftValue": "={{ $json.isoDate }}",
+              "rightValue": "={{ $today.format('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -460,
+        120
+      ],
+      "id": "3f1ac3bc-a39c-472a-b95e-9af8391820d1",
+      "name": "Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "## Fetching\nThis flow triggers a preocess of fetching RSS of list of webpages and extract unique guid of each articles which are inserted in Postgre\n",
+        "height": 780,
+        "width": 1780,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1240,
+        -380
+      ],
+      "typeVersion": 1,
+      "id": "553f1fce-8a94-4faa-b73a-3258300cc289",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 1,8,15,22 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        -240
+      ],
+      "id": "53285b83-d36d-4046-a020-7184a22cbd90",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "return[\n  { \"json\": { \"feed\": \"https://vnexpress.net/rss/khoa-hoc-cong-nghe.rss\" } },\n  { \"json\": { \"feed\": \"https://knowtechie.com/category/ai/feed/\" } },\n  { \"json\": { \"feed\": \"https://futurism.com/categories/ai-artificial-intelligence/feed\" } },\n  { \"json\": { \"feed\": \"https://insidehpc.com/category/ai-news/feed/\" } },\n  { \"json\": { \"feed\": \"https://caioconnect.org/feed/\" }\n  },\n  { \"json\": { \"feed\": \"https://www.artificialintelligence-news.com/feed/\" }},\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        -20
+      ],
+      "id": "5f6472e2-4dc8-483e-b206-594945e5d2c4",
+      "name": "RSS Feeds"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -780,
+        -20
+      ],
+      "id": "42f15a51-e5fe-4d73-b459-616fc5bc39ff",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -240
+      ],
+      "id": "5a575d8e-aacd-4832-9b02-e375024562e2",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7e92561f-ac25-4110-9edf-2ce3bd42a033",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -280,
+        180
+      ],
+      "id": "e17329ff-4b76-487d-b6ac-9ba206f74508",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7f219223-144e-4a3d-aa94-73bdc16aa3f8",
+              "leftValue": "={{ $json.guid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -460,
+        -40
+      ],
+      "id": "5565ec62-539f-4bc9-902c-befb18ed1dc3",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "o72AI9J5QL4ox6j9",
+          "mode": "list",
+          "cachedResultName": "Loop GUID"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        120
+      ],
+      "id": "caed5da5-6350-455c-86b6-ff66e79dca7b",
+      "name": "Get Guid"
+    }
+  ],
+  "connections": {
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [
+          {
+            "node": "Insert New Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Data": {
+      "main": [
+        []
+      ]
+    },
+    "Insert New Data": {
+      "main": [
+        []
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Feeds",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feeds": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Guid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Guid": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9295b22a309b6e3383c40aee81f54809ee1fb468c7f2047b0ddac566be4f121c"
+  }
+}
